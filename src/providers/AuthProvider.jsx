@@ -1,8 +1,10 @@
-import { createContext, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import {
     createUserWithEmailAndPassword,
     getAuth,
-    signInWithEmailAndPassword
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut
 } from "firebase/auth";
 import app from '../firebase/firebase.config';
 
@@ -15,17 +17,43 @@ const AuthProvider = ({ children }) => {
     const auth = getAuth(app);
     const [user, setUser] = useState(null);
 
+    //user registration
+
     const createUser = (email, password) => {
         return createUserWithEmailAndPassword(auth, email, password)
     }
 
+    // user logIn after registration
+
     const signIn = (email, password) => {
         return signInWithEmailAndPassword(auth, email, password)
     }
+
+    // Observed OnState changed
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, currentUser => {
+            console.log("Auth state Chanaged !!!", currentUser);
+            setUser(currentUser);
+        })
+
+        return () => {
+            unsubscribe();
+        }
+    }, [])
+
+    //user logOut
+
+    const logOut = () => {
+        return signOut(auth)
+    }
+
+    //Sent context element for every components.
     const authInfo = {
         user,
         createUser,
         signIn,
+        logOut,
     }
 
     return (
